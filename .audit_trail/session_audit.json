@@ -1,0 +1,39 @@
+{
+  "timestamp": "2026-08-28T09:43:29.781558+00:00",
+  "operation": "MEMOGRAPH_INTEGRATION_START",
+  "session_id": "gateway-demo",
+  "actor": "agent",
+  "scope": "gateway",
+  "description": "Starting surgical memograph integration. Main context preserved as fallback. Memograph is exclusive primary pool.",
+  "previous_state": {
+    "memograph_version": "0.2.0",
+    "repo": "https://github.com/artifact-opensource/memory_context_protocol",
+    "commit": "ee69a4d",
+    "tests_passed": "12/12",
+    "main_context": "preserved",
+    "memograph_active": false
+  },
+  "authorizations": [
+    "agent",
+    "user:ali"
+  ],
+  "reason": "Dogfood memograph as only context pool with safe-mode fallback.",
+  "operations": [
+    {
+      "timestamp": "2026-08-28T09:44:51.216240+00:00",
+      "operation": "DOCS_INDEX_CREATED",
+      "actor": "agent",
+      "file": "docs/index.html",
+      "size_bytes": 10315,
+      "features": [
+        "hero",
+        "3_stream_cards",
+        "memograph_graph_section",
+        "sidebar_navigation",
+        "docs_index_grid",
+        "gh_pages_ready"
+      ],
+      "reason": "GitHub Pages landing page with full sidebar nav + documentation index."
+    }
+  ]
+}

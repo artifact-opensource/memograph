@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Memograph v0.2.0">
+<title>Memograph — Institutional Memory Protocol</title>
+<style>
+:root{--bg:#0b0c15;--surface:#111328;--surface-2:#16183a;--fg:#e9e8f0;--fg-dim:#b2afc7;--accent:#c084fc;--accent-2:#f472b6;--border:#2c2e4d;--mono:#8b8bba}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@300;400&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--fg);line-height:1.45;min-height:100vh}
+.container{max-width:1200px;margin:0 auto;padding:2.5rem 1.5rem;display:grid;grid-template-columns:260px 1fr;gap:3rem;align-items:start}
+@media (max-width:980px){.container{grid-template-columns:1fr;padding:1.5rem}}
+
+/* Sidebar */
+.side{position:sticky;top:2rem;align-self:start}
+.side .brand{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);border-left:3px solid var(--accent);padding-left:.7rem;margin-bottom:1.6rem;line-height:1.4}
+.side h3{font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;color:var(--fg-dim);margin:1.6rem 0 .55rem;border-bottom:1px solid var(--border);padding-bottom:.3rem}
+.side ul{list-style:none}
+.side li{margin:.15rem 0}
+.side a{color:var(--fg-dim);text-decoration:none;font-size:.85rem;display:block;padding:.18rem 0;border-radius:4px;transition:color .15s,background .15s}
+.side a:hover{color:var(--fg);background:rgba(192,132,252,.08)}
+.side .tag{display:inline-block;font-size:.65rem;padding:.15rem .45rem;border-radius:99px;background:var(--surface-2);color:var(--accent);margin:.15rem .15rem 0 0;border:1px solid var(--border)}
+
+/* Hero */
+.hero{padding:3rem 0 2.5rem;border-bottom:1px solid var(--border);margin-bottom:2rem}
+.hero .version{font-family:'JetBrains Mono',monospace;color:var(--fg-dim);font-size:.82rem;margin-bottom:.6rem}
+.hero h1{font-weight:800;font-size:3rem;line-height:1.08;letter-spacing:-.03em;margin-bottom:1rem;background:linear-gradient(135deg,#c084fc,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p.lead{font-size:1.15rem;color:var(--fg-dim);max-width:640px;margin-bottom:1.4rem}
+.hero .meta{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--mono);display:flex;gap:1.2rem;flex-wrap:wrap}
+.hero .meta span{border:1px solid var(--border);padding:.25rem .5rem;border-radius:6px}
+
+/* Sections */
+section{margin-bottom:3rem}
+h2{font-weight:700;font-size:1.3rem;margin-bottom:.9rem;letter-spacing:-.01em;padding-bottom:.4rem;border-bottom:2px solid var(--surface-2)}
+h3{font-weight:600;font-size:1.05rem;color:var(--fg);margin:1.2rem 0 .35rem}
+p{color:var(--fg-dim);margin-bottom:.9rem;font-size:.95rem}
+
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+@media (max-width:880px){.cards{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.2rem;transition:transform .1s,border-color .15s}
+.card:hover{transform:translateY(-2px);border-color:var(--accent)}
+.card h4{font-weight:600;color:var(--fg);margin-bottom:.35rem;font-size:1.05rem}
+.card p{font-size:.85rem;color:var(--fg-dim);margin:0}
+.card .label{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--accent);margin-top:.6rem}
+
+pre{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:.85rem 1rem;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:.82rem;color:#d0d0e0;line-height:1.35;margin:1rem 0}
+pre code{font-family:inherit}
+
+.toc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.6rem}
+.toc-grid a{display:block;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.6rem .8rem;color:var(--fg);text-decoration:none;font-size:.85rem;font-weight:500;transition:border-color .15s}
+.toc-grid a:hover{border-color:var(--accent);color:var(--fg)}
+.toc-grid .desc{font-weight:300;color:var(--fg-dim);font-size:.75rem;margin-top:.15rem}
+
+footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--mono);display:flex;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+footer a{color:var(--fg-dim);text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="container">
+<aside class="side" aria-label="Navigation">
+  <div class="brand">MEMOGRAPH / v0.2.0</div>
+  <h3>Overview</h3>
+  <ul>
+    <li><a href="#about">About</a></li>
+    <li><a href="#streams">The 3 Streams</a></li>
+    <li><a href="#graph">The MemoGraph</a></li>
+  </ul>
+  <h3>Documentation</h3>
+  <ul>
+    <li><a href="getting-started.html">Getting Started</a></li>
+    <li><a href="api.html">API Reference</a></li>
+    <li><a href="security.html">Security &amp; Governance</a></li>
+    <li><a href="architecture.md">Architecture</a></li>
+    <li><a href="SPECS.md">Specs</a></li>
+  </ul>
+  <h3>Reference</h3>
+  <ul>
+    <li><a href="README.md">Project README</a></li>
+    <li><a href="CHANGELOG.md">Changelog</a></li>
+    <li><a href="https://github.com/artifact-opensource/memory_context_protocol">GitHub Repo</a></li>
+  </ul>
+  <h3>Setup</h3>
+  <ul>
+    <li><a href="../setup_project.sh">setup_project.sh</a></li>
+    <li><a href="../pyproject.toml">pyproject.toml</a></li>
+    <li><a href="tests/test_core.py">Tests (12/12 pass)</a></li>
+  </ul>
+  <div style="margin-top:1.5rem">
+    <span class="tag">LIVE</span><span class="tag">PROJECT</span><span class="tag">ENTERPRISE</span>
+  </div>
+</aside>
+
+<main>
+<section class="hero" id="about" aria-label="Hero">
+  <div class="version">MEMOGRAPH PROTOCOL — v0.2.0 / INSTITUTIONAL MEMORY</div>
+  <h1>Memory is not a folder.<br>Memory is topology.</h1>
+  <p class="lead">Three independent streams — Live, Project, Enterprise — that never merge physically but can assemble into temporary unified context. Every shard has a hash, an owner, a scope, and a lifecycle.</p>
+  <div class="meta">
+    <span>SHA256 SHARDS</span>
+    <span>3-DOMAIN ROUTING</span>
+    <span>TOKEN-CAPPED GRAPH</span>
+    <span>APPEND-ONLY AUDIT</span>
+  </div>
+</section>
+
+<section id="streams" aria-label="The Three Streams">
+<h2>The Three Memory Streams</h2>
+<div class="cards">
+  <article class="card">
+    <h4>Live Conversational</h4>
+    <p>The present. Intent, decisions, constraints, working state. Shards have short lifetimes — some survive minutes, some are promoted to Project.</p>
+    <div class="label">DOMAIN: LIVE</div>
+  </article>
+  <article class="card">
+    <h4>Project Memory</h4>
+    <p>History, architecture, documents, data, agents. A project owns its identity and is not required to know other projects exist.</p>
+    <div class="label">DOMAIN: PROJECT</div>
+  </article>
+  <article class="card">
+    <h4>Enterprise / Org</h4>
+    <p>Policy, governance, standards, shared datasets, approval structures. Inherited by projects; never dumped globally.</p>
+    <div class="label">DOMAIN: ENTERPRISE</div>
+  </article>
+</div>
+</section>
+
+<section id="graph" aria-label="The MemoGraph">
+<h2>The MemoGraph — Not One Database</h2>
+<p>Memory stops being a folder hierarchy when shards can reference other shards. A project decision points to the conversation that produced it; the conversation points to the research; the research points to the dataset; the dataset points to the model; the result points back to the decision.</p>
+<p>Every relationship is addressable. The graph is traversed with a bounded token budget (knapsack-constrained) — context is an execution layer, memory is persistence. They never become the same thing.</p>
+
+<h3>Core Primitives</h3>
+<pre><code>MemoryShard(content, owner, scope, domain, parent_hash, permissions)
+  → compute_hash() → SHA256 identity
+
+ContextRouter(query_context, weights={semantic:0.40, recency:0.25, authority:0.20, affinity:0.15})
+  → score_shard() → permission + recency + authority + affinity
+
+MemoGraph.add_shard() / assemble_context(scored_shards, max_tokens)
+  → bounded traversal → temporary unified context</code></pre>
+</section>
+
+<section aria-label="Documentation Index">
+<h2>Documentation Index</h2>
+<div class="toc-grid">
+  <a href="getting-started.html">
+    Getting Started <span class="desc">Install, first shard, promotion pipeline</span>
+  </a>
+  <a href="api.html">
+    API Reference <span class="desc">MemoryShard, ContextRouter, MemoGraph, lifecycle</span>
+  </a>
+  <a href="security.html">
+    Security <span class="desc">Threat model, audit trail, permission model</span>
+  </a>
+  <a href="architecture.md">
+    Architecture <span class="desc">3-stream topology, hash chain, retrieval specialization</span>
+  </a>
+  <a href="SPECS.md">
+    Specs <span class="desc">v0.2.0 state machine, HEKTOR/KV hybrid, token budget</span>
+  </a>
+  <a href="README.md">
+    README <span class="desc">Full architecture diagram, quick start, design principles</span>
+  </a>
+  <a href="CHANGELOG.md">
+    Changelog <span class="desc">v0.2.0 features, promotion pipeline, auditability</span>
+  </a>
+</div>
+</section>
+
+<section aria-label="Dogfood Note" style="background:linear-gradient(135deg,var(--surface),var(--surface-2));border:1px solid var(--border);border-radius:12px;padding:1.2rem 1.5rem;">
+<h3 style="margin-top:0">Dogfood Note — Gateway Integration</h3>
+<p style="margin-bottom:0">Memograph is configured as the <strong>exclusive context pool</strong> for this gateway, with main Hermes context preserved as a safe-mode fallback (never overwritten, only dormant). Every retrieval/store/promotion event writes to an append-only audit trail. If Memograph fails — file mutation error, storage corruption, graph traversal failure — the agent falls back to native context and logs the failure, rather than going offline.</p>
+</section>
+
+<footer>
+  <div>Memograph v0.2.0 · <a href="https://github.com/artifact-opensource/memory_context_protocol">artifact-opensource</a> · <a href="https://hermes-agent.nousresearch.com/docs">Hermes docs</a></div>
+  <div>Built surgical. Audited. No context wall.</div>
+</footer>
+</main>
+</div>
+</body>
+</html>
