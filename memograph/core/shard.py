@@ -153,6 +153,17 @@ class MemoryShard:
             "content_type": self.content_type.name,
         }
         return data
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "MemoryShard":
+        return cls.create(
+            content=data["content"],
+            owner=data["owner"],
+            scope=data["scope"],
+            domain=ShardDomain[data["domain"].upper()],
+            parent_hash=data.get("parent_hash"),
+            permissions=data.get("permissions", []),
+        )
     
     @classmethod
     def create(cls, content: Dict[str, Any], owner: str, scope: str,

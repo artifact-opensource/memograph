@@ -1,39 +1,44 @@
 {
-  "timestamp": "2026-08-28T09:43:29.781558+00:00",
-  "operation": "MEMOGRAPH_INTEGRATION_START",
-  "session_id": "gateway-demo",
+  "timestamp": "2026-08-28T10:03:22.415675+00:00",
+  "operation": "ENTERPRISE_SCAN_START",
   "actor": "agent",
-  "scope": "gateway",
-  "description": "Starting surgical memograph integration. Main context preserved as fallback. Memograph is exclusive primary pool.",
-  "previous_state": {
-    "memograph_version": "0.2.0",
-    "repo": "https://github.com/artifact-opensource/memory_context_protocol",
-    "commit": "ee69a4d",
-    "tests_passed": "12/12",
-    "main_context": "preserved",
-    "memograph_active": false
-  },
+  "scope": "filesystem_root",
+  "description": "Scoping entire machine for Artifact Virtual organization, Symbiote, C-suite, projects, infrastructure. Excluding system/third-party.",
+  "exclusions": [
+    "/proc",
+    "/sys",
+    "/dev",
+    "/var/lib",
+    "/var/cache",
+    "/usr",
+    "/lib",
+    "/lib64",
+    "/sbin",
+    "/bin",
+    "/opt",
+    "/snap",
+    "/boot",
+    "/.snapshots",
+    "/.cache",
+    "/tmp",
+    "/run"
+  ],
   "authorizations": [
-    "agent",
     "user:ali"
   ],
-  "reason": "Dogfood memograph as only context pool with safe-mode fallback.",
+  "reason": "Build enterprise/project/live memory streams from real machine state to dogfood memograph context injection.",
   "operations": [
     {
-      "timestamp": "2026-08-28T09:44:51.216240+00:00",
-      "operation": "DOCS_INDEX_CREATED",
+      "timestamp": "2026-08-28T10:11:59.558479+00:00",
+      "operation": "ENTERPRISE_SCAN_COMPLETE",
       "actor": "agent",
-      "file": "docs/index.html",
-      "size_bytes": 10315,
-      "features": [
-        "hero",
-        "3_stream_cards",
-        "memograph_graph_section",
-        "sidebar_navigation",
-        "docs_index_grid",
-        "gh_pages_ready"
-      ],
-      "reason": "GitHub Pages landing page with full sidebar nav + documentation index."
+      "shards_stored": 5,
+      "domains": {
+        "enterprise": 1,
+        "project": 3,
+        "live": 1
+      },
+      "reason": "Filesystem scan complete."
     }
   ]
 }
