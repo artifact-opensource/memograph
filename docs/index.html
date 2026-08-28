@@ -180,24 +180,82 @@ body{
   border-radius:2px;
 }
 
-/* ── Collapsible sidebar ── */
+/* ── Collapsible sidebar (mobile) ── */
 .hamburger{
   display:none;
   background:var(--bg-2);
   border:1px solid var(--border);
   color:var(--fg);
   cursor:pointer;
-  font-size:1.3rem;
+  font-size:1.4rem;
   line-height:1;
-  padding:.35rem .55rem;
+  padding:.5rem .7rem;
   border-radius:3px;
   font-family:'IBM Plex Mono',monospace;
-  margin-bottom:.75rem;
+  min-width:44px;
+  min-height:44px;
 }
+.hamburger:hover{background:var(--bg-3);border-color:var(--fg-3)}
+.hamburger[aria-expanded="true"]{transform:rotate(90deg);transition:transform .2s}
+
+.mobile-header{
+  display:none;
+  position:sticky;
+  top:0;
+  z-index:100;
+  background:var(--bg-2);
+  border-bottom:1px solid var(--border);
+  padding:.75rem 1rem;
+  align-items:center;
+  gap:.75rem;
+}
+.mobile-brand{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:.7rem;
+  font-weight:600;
+  letter-spacing:.15em;
+  color:var(--fg-2);
+}
+
 @media(max-width:900px){
-  .hamburger{display:inline-block}
+  .mobile-header{display:flex}
+  .hamburger{display:inline-flex;align-items:center;justify-content:center}
   .sidebar.collapsed{display:none}
+  .sidebar{
+    width:100%;
+    height:auto;
+    position:fixed;
+    top:53px;
+    left:0;
+    right:0;
+    background:var(--bg-2);
+    z-index:99;
+    border-right:none;
+    border-bottom:1px solid var(--border);
+    padding:1rem 1.5rem;
+    max-height:calc(100vh - 53px);
+    overflow-y:auto;
+    box-shadow:0 4px 12px rgba(0,0,0,.5);
+  }
+  .main{padding:2rem 1.5rem}
 }
+
+@media(max-width:600px){
+  .main{padding:1.5rem 1rem}
+  .hero h1{font-size:1.85rem;line-height:1.15}
+  .hero-sub{font-size:.95rem}
+  pre{font-size:.72rem;padding:.7rem .8rem}
+  .doc-card-title{font-size:.82rem}
+  .doc-card-desc{font-size:.7rem}
+  footer{flex-direction:column;gap:.4rem}
+}
+
+@media(max-width:380px){
+  .hero h1{font-size:1.55rem}
+  .hero-meta{gap:.4rem}
+  .hero-badge{font-size:.6rem;padding:.2rem .45rem}
+}
+
 
 /* ── Content ── */
 section{margin-bottom:3.5rem}
@@ -320,9 +378,14 @@ footer a{color:var(--fg-3);text-decoration:underline}
 <body>
 <div class="layout">
 
+<!-- Mobile sticky header with toggle -->
+<header class="mobile-header" aria-label="Navigation toggle">
+  <button class="hamburger" onclick="document.getElementById('sideNav').classList.toggle('collapsed');this.setAttribute('aria-expanded', document.getElementById('sideNav').classList.contains('collapsed')?'false':'true')" aria-label="Toggle navigation" aria-expanded="true">☰</button>
+  <span class="mobile-brand">MEMOGRAPH</span>
+</header>
+
 <!-- Sidebar -->
 <nav class="sidebar" aria-label="Site navigation" id="sideNav">
-  <button class="hamburger" onclick="document.getElementById('sideNav').classList.toggle('collapsed')" aria-label="Toggle navigation">☰</button>
   <div class="sidebar-brand">MEMOGRAPH / v0.2.0</div>
 
   <div class="sidebar-section">
