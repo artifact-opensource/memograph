@@ -52,7 +52,7 @@ class EventType(Enum):
     POLICY_GATE = "policy_gate"  # Policy decision recorded
 
 
-@dataclass(frozen=True)
+@dataclass
 class MemoryEvent:
     """
     An immutable record of a memory state transition.
