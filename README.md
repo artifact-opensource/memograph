@@ -273,6 +273,42 @@ Once agents become persistent, autonomous, and organizationally embedded, they d
 - **Inheritance** — enterprise → project → live context flows
 - **Auditability** — reconstruct what the agent knew at decision time
 
+## Production Readiness (v0.2.0 — Full Build)
+
+Memograph now includes the missing production-grade layer. These are not optional — they're required before an agent uses this in any non-trivial deployment.
+
+| Production Feature | Implementation | Status |
+|---|---|---|
+| **Permission enforcement** | `memograph.auth.is_authorized()` — identity-based, org/project/user scope matching, default-deny | ✅ |
+| **Blast-radius filter** | `router.scope_filter()` runs before scoring; `route()` takes `allowed_scopes` / `allowed_orgs` | ✅ |
+| **Schema versioning** | `SCHEMA_VERSION = 2`; auto-migrate `v1 → v2` via `_migrate_v1_to_v2()`; embedded in serialized files | ✅ |
+| **Transactional writes** | `save()` uses `tempfile.mkstemp()` → `fsync()` → atomic `os.rename()`; no partial/corrupt state | ✅ |
+| **Cost-aware traversal** | `assemble_context()` calculates `effective_cost = base - overlap_deduction`; tracks `excluded_overlaps` | ✅ |
+| **Overlap detection** | Connected shards (parent/child via edges) deducted from token budget when already selected | ✅ |
+| **Audit trail** | `MemoryEvent` with hash chain; every promotion/store/retrieve logged to `.audit_trail/` | ✅ |
+
+```python
+from memograph import MemoGraph, Identity
+from memograph.auth import AGENT_IDENTITY
+
+# Load — schema auto-migrated
+g = MemoGraph.load(".memograph_storage/gateway_skills.json")
+
+# Blast-radius: only allowed scopes enter scoring
+allowed = g.scope_filter(all_shards,
+                         allowed_scopes={"skills:catalog"},
+                         allowed_orgs={"artifact-virtual"})
+
+# Authorize retrieval before scoring
+from memograph.auth import is_authorized
+auth_ok = [s for s in allowed if is_authorized(s.permissions, AGENT_IDENTITY)]
+
+# Token-capped assembly with overlap awareness
+env = g.assemble_context(scored, max_tokens=1024, allow_overlap=True)
+```
+
+See `docs/production.md` for full architecture notes.
+
 ---
 
 ## Contributing

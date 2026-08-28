@@ -59,6 +59,12 @@
 | Fallback preserved | Main agent profile (`default`) untouched; only `.audit_trail/` created | PASS |
 | Pytest | `pytest tests/test_core.py` | PASS (12/12) |
 | Audit append-only | `.audit_trail/session_audit.json` updated 2× (start + complete) without mutation of prior entries | PASS |
+| Skills catalog import | Parsed 31 skills from `~/.hermes/skills/` into 3 new shards (ENTERPRISE/PROJECT/LIVE) | PASS |
+| Schema v2 migration | `_mograph_schema` embedded; auto-migrates v1 → v2 on load | PASS |
+| Atomic save | `tempfile.mkstemp` → `fsync` → atomic `os.rename` (no partial state) | PASS |
+| Permission enforcement | `is_authorized()` returns False on default-deny; agent identity passes | PASS |
+| Blast-radius filter | `scope_filter()` excludes out-of-scope shards before scoring | PASS |
+| Cost-aware traversal | `assemble_context` deducts overlap cost for connected shards | PASS |
 
 ---
 
