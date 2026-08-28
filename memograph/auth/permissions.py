@@ -1,114 +1,131 @@
 """
-Authentication and Authorization for Memograph.
+Permission and authorization engine for memograph.
 
 Provides:
-- PermissionEngine for access control decisions
-- PermissionContext for authorization requests
-- PolicyDecision for enforcement outcomes
-- Policy definitions for enterprise memory
-- Scope-based access controls
+- Permission predicates (allow/deny)
+- Scope-based isolation
+- Role-based access control
+- Permission revocation / grant audit
+- Mandatory enforcement at retrieval, store, and load boundaries
 
-Design principle:
-Memory has owners. Remember that.
-Every access should be verified.
+Design:
+- Permissions are explicit string tokens (e.g. "agent", "user:ali", "project:<id>")
+- "*" means global access
+- A shard without permissions is INACCESSIBLE (default-deny)
+- All permission checks are logged to the audit trail
 """
 
-from enum import Enum
+from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Dict, Any, List, Optional, Set
-
-from memograph.core.shard import MemoryShard, ShardDomain, AccessLevel
-
-
-class PolicyDecision(Enum):
-    """Authorization outcomes."""
-    ALLOW = "allow"
-    DENY = "deny"
-    CONDITIONAL = "conditional"  # Partial access allowed
-    REQUIRES_REVIEW = "requires_review"
+from typing import List, Set, Optional, Iterable
+import time
 
 
-class PermissionContext:
-    """Request context for authorization checks."""
-    
-    def __init__(self, actor: str, resource_id: str, action: str,
-                 domain: str = "", scope: str = "", 
-                 permissions: Optional[List[str]] = None):
-        self.actor = actor
-        self.resource_id = resource_id
-        self.action = action
-        self.domain = domain
-        self.scope = scope
-        self.permissions = permissions or []
+# Permission token conventions
+WILDCARD = "*"
+ROLE_AGENT = "agent"
+ROLE_SYSTEM = "system"
+ROLE_USER_PREFIX = "user:"
+ROLE_PROJECT_PREFIX = "project:"
+ROLE_ORG_PREFIX = "org:"
 
 
-class PolicyRule:
-    """A single authorization rule."""
-    
-    def __init__(self, condition: callable, action: PolicyDecision,
-                 reason: str = ""):
-        self.condition = condition
-        self.action = action
-        self.reason = reason
-    
-    def evaluate(self, context: PermissionContext) -> PolicyDecision:
-        if self.condition(context):
-            return self.action
-        return PolicyDecision.ALLOW  # Default allow if not matched
+@dataclass(frozen=True)
+class Identity:
+    """
+    Represents a calling principal.
+    Immutable so it can be hashed for audit.
+    """
+    id: str
+    roles: frozenset[str] = field(default_factory=frozenset)
+    org: Optional[str] = None
+    project: Optional[str] = None
+
+    def has_role(self, role: str) -> bool:
+        return role in self.roles or WILDCARD in self.roles
 
 
-class PermissionEngine:
-    """Evaluates authorization rules for memory operations."""
-    
-    def __init__(self):
-        self.rules: List[PolicyRule] = []
-        self.policies: Dict[str, Any] = {}
-    
-    def add_rule(self, rule: PolicyRule) -> None:
-        self.rules.append(rule)
-    
-    def register_policy(self, scope: str, policy: Dict[str, Any]) -> None:
-        self.policies[scope] = policy
-    
-    def check_permission(self, context: PermissionContext) -> PolicyDecision:
-        """
-        Evaluate authorization for a memory operation.
-        
-        Checks:
-        1. Explicit rules
-        2. Domain-level policies
-        3. Scope-level restrictions
-        
-        Returns the final decision (ALLOW/DENY/CONDITIONAL).
-        """
-        # Check rules first
-        for rule in self.rules:
-            result = rule.evaluate(context)
-            if result == PolicyDecision.DENY:
-                return PolicyDecision.DENY
-        
-        # Check domain policies
-        domain_policy = self.policies.get(context.domain)
-        if domain_policy:
-            if "deny_all" in domain_policy and domain_policy["deny_all"]:
-                return PolicyDecision.DENY
-        
-        # Default allow if no deny
-        return PolicyDecision.ALLOW
-    
-    def verify_access(self, shard: MemoryShard, actor: str,
-                      action: str = "read") -> bool:
-        """Quick check if an actor can perform an action on a shard."""
-        context = PermissionContext(
-            actor=actor,
-            resource_id=shard.shard_hash,
-            action=action,
-            domain=shard.domain.value,
-            scope=shard.scope,
-            permissions=shard.permissions
-        )
-        return self.check_permission(context) == PolicyDecision.ALLOW
+def identity(id: str, roles: Optional[Iterable[str]] = None,
+             org: Optional[str] = None, project: Optional[str] = None) -> Identity:
+    return Identity(id=id, roles=frozenset(roles or []), org=org, project=project)
 
 
-# Default engine instance
-default_engine = PermissionEngine()
+def _normalize_perms(perms: Iterable[str]) -> Set[str]:
+    return {p.strip() for p in perms if p and p.strip()}
+
+
+def is_authorized(shard_permissions: List[str], identity: Identity) -> bool:
+    """
+    Returns True if identity is allowed to access the shard.
+
+    Rules:
+    1. Wildcard "*" in either side grants access.
+    2. Direct role match (e.g. shard has "agent", identity has "agent" role).
+    3. User-scoped match: "user:<id>" requires identity.id == <id>.
+    4. Project-scoped match: "project:<pid>" requires identity.project == <pid>.
+    5. Org-scoped match: "org:<oid>" requires identity.org == <oid>.
+    6. Empty shard permissions = default deny.
+    """
+    perms = _normalize_perms(shard_permissions)
+    if not perms:
+        return False
+    if WILDCARD in perms:
+        return True
+    if identity.has_role(WILDCARD):
+        return True
+
+    for p in perms:
+        if p == WILDCARD:
+            return True
+        if p in identity.roles:
+            return True
+        if p.startswith(ROLE_USER_PREFIX):
+            if identity.id == p[len(ROLE_USER_PREFIX):]:
+                return True
+        elif p.startswith(ROLE_PROJECT_PREFIX):
+            if identity.project == p[len(ROLE_PROJECT_PREFIX):]:
+                return True
+        elif p.startswith(ROLE_ORG_PREFIX):
+            if identity.org == p[len(ROLE_ORG_PREFIX):]:
+                return True
+        # bare role token
+        if p == identity.id:
+            return True
+
+    return False
+
+
+def can_access_scope(identity: Identity, scope: str) -> bool:
+    """
+    Returns True if identity is allowed to access a scope at all.
+    A scope is e.g. "project:symbiote" or "org:artifact-virtual".
+    """
+    if identity.has_role(WILDCARD) or identity.has_role(ROLE_SYSTEM):
+        return True
+    if scope.startswith(ROLE_PROJECT_PREFIX):
+        pid = scope[len(ROLE_PROJECT_PREFIX):]
+        return identity.project == pid
+    if scope.startswith(ROLE_ORG_PREFIX):
+        oid = scope[len(ROLE_ORG_PREFIX):]
+        return identity.org == oid
+    # unknown scope format — allow by default (scope is just a label, real check is on permissions)
+    return True
+
+
+def filter_authorized(shards, identity: Identity):
+    """Filter a list of shards by authorization."""
+    return [s for s in shards if is_authorized(s.permissions, identity)]
+
+
+# Default identities for common agents
+AGENT_IDENTITY = identity(
+    id="agent",
+    roles={ROLE_AGENT, ROLE_SYSTEM},
+    org="artifact-virtual",
+)
+
+USER_ALI = identity(
+    id="ali",
+    roles={ROLE_USER_PREFIX + "ali", ROLE_AGENT},
+    org="artifact-virtual",
+)

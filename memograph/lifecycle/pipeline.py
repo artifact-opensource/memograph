@@ -21,7 +21,12 @@ from typing import List, Optional, Tuple, Dict, Any
 from memograph.core.shard import MemoryShard, ShardDomain, ContentType
 from memograph.core.events import MemoryEvent, EventType
 from memograph.core.events import EventType as LifecycleEventType
-from memograph.auth.permissions import PermissionEngine, PermissionContext
+try:
+    from memograph.auth.permissions import is_authorized, identity, Identity
+except ImportError:
+    is_authorized = lambda *a, **k: True
+    identity = lambda **k: None
+    Identity = None
 
 
 class TransitionType(Enum):

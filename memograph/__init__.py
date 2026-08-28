@@ -26,7 +26,7 @@ from memograph.engines.kv_adapter import KVAdapter
 from memograph.engines.memory_store import MemoryStore
 
 # Auth
-from memograph.auth.permissions import PermissionEngine, PermissionContext, PolicyDecision
+from memograph.auth import is_authorized, identity, AGENT_IDENTITY, USER_ALI
 
 # Tool integration (last because it depends on lifecycle)
 from memograph.tools import (

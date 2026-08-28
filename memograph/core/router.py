@@ -22,7 +22,7 @@ sufficient context for the answer.
 import math
 import time
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional, Tuple, Set
 
 from memograph.core.shard import MemoryShard, ShardDomain
 from memograph.core.events import MemoryEvent, EventType
@@ -106,7 +106,9 @@ class ContextRouter:
         affinity = 1.0 if query.scope else 0.3
         return affinity * 0.5 + domain_weight * 0.5
     
-    def route(self, shards: List[MemoryShard], query: ContextQuery) -> List[Tuple[MemoryShard, float]]:
+    def route(self, shards: List[MemoryShard], query: ContextQuery,
+              allowed_scopes: Optional[Set[str]] = None,
+              allowed_orgs: Optional[Set[str]] = None) -> List[Tuple[MemoryShard, float]]:
         """
         Given a list of shards and a query, return ranked (shard, score) pairs.
         
@@ -117,18 +119,30 @@ class ContextRouter:
         Returns:
             List of (MemoryShard, score) tuples sorted by score descending
         """
-        scored = []
-        for shard in shards:
-            # Apply permission filter early
-            if not self._is_allowed(shard, query):
-                continue
-            
-            score = self.score_shard(shard, query)
-            scored.append((shard, score))
-        
-        # Sort by score descending
+        # 1. Blast-radius filter FIRST
+        candidates = self.scope_filter(shards,
+                                       allowed_scopes=allowed_scopes,
+                                       allowed_orgs=allowed_orgs)
+        allowed = [s for s in candidates if self._is_allowed(s, query)]
+        scored = [(s, self.score_shard(s, query)) for s in allowed]
         scored.sort(key=lambda x: x[1], reverse=True)
         return scored
+
+    def scope_filter(self, shards, allowed_scopes=None, allowed_orgs=None):
+        result = []
+        for s in shards:
+            if allowed_orgs:
+                ok = any(
+                    s.scope.startswith(f"org:{org}") or f"org:{org}" in s.scope
+                    for org in allowed_orgs
+                )
+                if not ok:
+                    continue
+            if allowed_scopes and s.scope not in allowed_scopes:
+                if not any(s.scope.startswith(sc) or sc in s.scope for sc in allowed_scopes):
+                    continue
+            result.append(s)
+        return result
     
     def _is_allowed(self, shard: MemoryShard, query: ContextQuery) -> bool:
         """Check if a shard is permitted for this query."""
