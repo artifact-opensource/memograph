@@ -486,44 +486,6 @@ MemoGraph.add_shard() / assemble_context(scored_shards, max_tokens)
   → bounded traversal → temporary unified context</code></pre>
 </section>
 
-<section aria-label="Documentation Index">
-  <h2>Documentation</h2>
-  <div class="doc-grid">
-    <a class="doc-card" href="getting-started.html">
-      <span class="doc-card-title">Getting Started</span>
-      <span class="doc-card-desc">Install, first shard, promotion pipeline</span>
-    </a>
-    <a class="doc-card" href="api.html">
-      <span class="doc-card-title">API Reference</span>
-      <span class="doc-card-desc">MemoryShard, ContextRouter, MemoGraph, lifecycle</span>
-    </a>
-    <a class="doc-card" href="security.html">
-      <span class="doc-card-title">Security</span>
-      <span class="doc-card-desc">Threat model, audit trail, permission model</span>
-    </a>
-    <a class="doc-card" href="DOGFOOD_REPORT.md">
-      <span class="doc-card-title">Dogfood Report</span>
-      <span class="doc-card-desc">Gateway integration test results</span>
-    </a>
-    <a class="doc-card" href="architecture.md">
-      <span class="doc-card-title">Architecture</span>
-      <span class="doc-card-desc">3-stream topology, hash chain, retrieval specialization</span>
-    </a>
-    <a class="doc-card" href="SPECS.md">
-      <span class="doc-card-title">Specs</span>
-      <span class="doc-card-desc">v0.2.0 state machine, token budget, adapters</span>
-    </a>
-    <a class="doc-card" href="../README.md">
-      <span class="doc-card-title">README</span>
-      <span class="doc-card-desc">Architecture diagram, quick start, design principles</span>
-    </a>
-    <a class="doc-card" href="../CHANGELOG.md">
-      <span class="doc-card-title">Changelog</span>
-      <span class="doc-card-desc">v0.2.0 release notes</span>
-    </a>
-  </div>
-</section>
-
 <div class="info-box">
   <h3>Dogfood</h3>
   <p>Memograph is the exclusive primary context pool on this machine. Main context preserved as dormant safe-mode fallback. Every operation writes to an append-only audit trail. File mutation failures are caught, logged, and handled without going offline.</p>
