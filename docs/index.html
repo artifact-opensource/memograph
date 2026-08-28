@@ -3,139 +3,400 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Memograph v0.2.0">
 <title>Memograph — Institutional Memory Protocol</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0b0c15;--surface:#111328;--surface-2:#16183a;--fg:#e9e8f0;--fg-dim:#b2afc7;--accent:#c084fc;--accent-2:#f472b6;--border:#2c2e4d;--mono:#8b8bba}
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@300;400&display=swap');
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--fg);line-height:1.45;min-height:100vh}
-.container{max-width:1200px;margin:0 auto;padding:2.5rem 1.5rem;display:grid;grid-template-columns:260px 1fr;gap:3rem;align-items:start}
-@media (max-width:980px){.container{grid-template-columns:1fr;padding:1.5rem}}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
-/* Sidebar */
-.side{position:sticky;top:2rem;align-self:start}
-.side .brand{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);border-left:3px solid var(--accent);padding-left:.7rem;margin-bottom:1.6rem;line-height:1.4}
-.side h3{font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;color:var(--fg-dim);margin:1.6rem 0 .55rem;border-bottom:1px solid var(--border);padding-bottom:.3rem}
-.side ul{list-style:none}
-.side li{margin:.15rem 0}
-.side a{color:var(--fg-dim);text-decoration:none;font-size:.85rem;display:block;padding:.18rem 0;border-radius:4px;transition:color .15s,background .15s}
-.side a:hover{color:var(--fg);background:rgba(192,132,252,.08)}
-.side .tag{display:inline-block;font-size:.65rem;padding:.15rem .45rem;border-radius:99px;background:var(--surface-2);color:var(--accent);margin:.15rem .15rem 0 0;border:1px solid var(--border)}
+:root{
+  --bg:#0f0f0f;
+  --bg-2:#161616;
+  --bg-3:#1e1e1e;
+  --fg:#ececec;
+  --fg-2:#999;
+  --fg-3:#555;
+  --border:#2e2e2e;
+  --border-2:#222;
+  --white:#fff;
+  --black:#000;
+}
 
-/* Hero */
-.hero{padding:3rem 0 2.5rem;border-bottom:1px solid var(--border);margin-bottom:2rem}
-.hero .version{font-family:'JetBrains Mono',monospace;color:var(--fg-dim);font-size:.82rem;margin-bottom:.6rem}
-.hero h1{font-weight:800;font-size:3rem;line-height:1.08;letter-spacing:-.03em;margin-bottom:1rem;background:linear-gradient(135deg,#c084fc,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.hero p.lead{font-size:1.15rem;color:var(--fg-dim);max-width:640px;margin-bottom:1.4rem}
-.hero .meta{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--mono);display:flex;gap:1.2rem;flex-wrap:wrap}
-.hero .meta span{border:1px solid var(--border);padding:.25rem .5rem;border-radius:6px}
+html{scroll-behavior:smooth}
 
-/* Sections */
-section{margin-bottom:3rem}
-h2{font-weight:700;font-size:1.3rem;margin-bottom:.9rem;letter-spacing:-.01em;padding-bottom:.4rem;border-bottom:2px solid var(--surface-2)}
-h3{font-weight:600;font-size:1.05rem;color:var(--fg);margin:1.2rem 0 .35rem}
-p{color:var(--fg-dim);margin-bottom:.9rem;font-size:.95rem}
+body{
+  font-family:'IBM Plex Sans',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--fg);
+  line-height:1.5;
+  min-height:100vh;
+}
 
-.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
-@media (max-width:880px){.cards{grid-template-columns:1fr}}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.2rem;transition:transform .1s,border-color .15s}
-.card:hover{transform:translateY(-2px);border-color:var(--accent)}
-.card h4{font-weight:600;color:var(--fg);margin-bottom:.35rem;font-size:1.05rem}
-.card p{font-size:.85rem;color:var(--fg-dim);margin:0}
-.card .label{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--accent);margin-top:.6rem}
+/* ── Layout ── */
+.layout{
+  display:flex;
+  min-height:100vh;
+}
 
-pre{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:.85rem 1rem;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:.82rem;color:#d0d0e0;line-height:1.35;margin:1rem 0}
-pre code{font-family:inherit}
+/* ── Sidebar ── */
+.sidebar{
+  width:240px;
+  flex-shrink:0;
+  background:var(--bg-2);
+  border-right:1px solid var(--border);
+  padding:2rem 1.25rem;
+  position:sticky;
+  top:0;
+  height:100vh;
+  overflow-y:auto;
+}
 
-.toc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.6rem}
-.toc-grid a{display:block;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.6rem .8rem;color:var(--fg);text-decoration:none;font-size:.85rem;font-weight:500;transition:border-color .15s}
-.toc-grid a:hover{border-color:var(--accent);color:var(--fg)}
-.toc-grid .desc{font-weight:300;color:var(--fg-dim);font-size:.75rem;margin-top:.15rem}
+.sidebar-brand{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:.7rem;
+  font-weight:600;
+  letter-spacing:.15em;
+  text-transform:uppercase;
+  color:var(--fg-2);
+  padding-bottom:1.5rem;
+  margin-bottom:1.5rem;
+  border-bottom:1px solid var(--border);
+}
 
-footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--mono);display:flex;justify-content:space-between;flex-wrap:wrap;gap:1rem}
-footer a{color:var(--fg-dim);text-decoration:underline}
+.sidebar-section{margin-bottom:1.5rem}
+
+.sidebar-section-title{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:.62rem;
+  font-weight:600;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--fg-3);
+  margin-bottom:.4rem;
+}
+
+.sidebar ul{list-style:none}
+
+.sidebar li{margin:.08rem 0}
+
+.sidebar a{
+  color:var(--fg-2);
+  text-decoration:none;
+  font-size:.83rem;
+  display:block;
+  padding:.22rem .5rem;
+  border-radius:3px;
+  border-left:2px solid transparent;
+  transition:color .12s,border-color .12s,background .12s;
+}
+.sidebar a:hover{
+  color:var(--fg);
+  background:var(--bg-3);
+  border-left-color:var(--fg-3);
+}
+.sidebar a.active{
+  color:var(--fg);
+  border-left-color:var(--white);
+  background:var(--bg-3);
+}
+
+.sidebar-tags{
+  display:flex;
+  flex-wrap:wrap;
+  gap:.3rem;
+  margin-top:.5rem;
+}
+
+.tag{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:.6rem;
+  letter-spacing:.08em;
+  padding:.2rem .5rem;
+  border:1px solid var(--border);
+  color:var(--fg-3);
+  border-radius:2px;
+}
+
+/* ── Main ── */
+.main{
+  flex:1;
+  min-width:0;
+  padding:3.5rem 4rem;
+  max-width:860px;
+}
+
+@media(max-width:900px){
+  .layout{flex-direction:column}
+  .sidebar{width:100%;height:auto;position:static;border-right:none;border-bottom:1px solid var(--border);padding:1.5rem}
+  .main{padding:2rem 1.5rem}
+}
+
+/* ── Hero ── */
+.hero{
+  padding-bottom:3rem;
+  margin-bottom:3rem;
+  border-bottom:1px solid var(--border);
+}
+
+.hero-label{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:.72rem;
+  color:var(--fg-3);
+  letter-spacing:.1em;
+  margin-bottom:1rem;
+}
+
+.hero h1{
+  font-size:2.6rem;
+  font-weight:700;
+  line-height:1.1;
+  letter-spacing:-.025em;
+  margin-bottom:1.2rem;
+  color:var(--white);
+}
+
+.hero-sub{
+  font-size:1.05rem;
+  color:var(--fg-2);
+  max-width:600px;
+  margin-bottom:1.5rem;
+  font-weight:300;
+}
+
+.hero-meta{
+  display:flex;
+  gap:.6rem;
+  flex-wrap:wrap;
+}
+
+.hero-badge{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:.68rem;
+  letter-spacing:.06em;
+  padding:.25rem .6rem;
+  border:1px solid var(--border);
+  color:var(--fg-2);
+  border-radius:2px;
+}
+
+/* ── Content ── */
+section{margin-bottom:3.5rem}
+
+h2{
+  font-size:1.15rem;
+  font-weight:700;
+  letter-spacing:-.01em;
+  color:var(--white);
+  margin-bottom:1rem;
+  padding-bottom:.5rem;
+  border-bottom:1px solid var(--border-2);
+}
+
+h3{
+  font-size:.95rem;
+  font-weight:600;
+  color:var(--fg);
+  margin:1.5rem 0 .4rem;
+}
+
+p{color:var(--fg-2);margin-bottom:.8rem;font-size:.92rem;line-height:1.6}
+
+/* ── Cards ── */
+.cards{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:.8rem;
+}
+
+@media(max-width:700px){.cards{grid-template-columns:1fr}}
+
+.card{
+  background:var(--bg-2);
+  border:1px solid var(--border);
+  border-radius:4px;
+  padding:1.1rem 1.2rem;
+  transition:border-color .12s;
+}
+.card:hover{border-color:var(--fg-3)}
+
+.card h4{
+  font-size:.92rem;
+  font-weight:600;
+  color:var(--fg);
+  margin-bottom:.3rem;
+}
+
+.card p{font-size:.82rem;color:var(--fg-2);margin:0;line-height:1.5}
+
+.card-domain{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:.62rem;
+  letter-spacing:.08em;
+  color:var(--fg-3);
+  margin-top:.6rem;
+}
+
+/* ── Code ── */
+pre{
+  background:var(--bg-2);
+  border:1px solid var(--border);
+  border-radius:4px;
+  padding:.9rem 1.1rem;
+  overflow-x:auto;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:.78rem;
+  color:var(--fg-2);
+  line-height:1.45;
+  margin:1rem 0;
+}
+
+/* ── Doc Grid ── */
+.doc-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:.6rem;
+}
+
+.doc-card{
+  display:block;
+  background:var(--bg-2);
+  border:1px solid var(--border);
+  border-radius:4px;
+  padding:.7rem 1rem;
+  text-decoration:none;
+  transition:border-color .12s;
+}
+.doc-card:hover{border-color:var(--fg-3)}
+.doc-card-title{font-size:.85rem;font-weight:600;color:var(--fg);display:block}
+.doc-card-desc{font-size:.73rem;color:var(--fg-3);margin-top:.2rem;display:block}
+
+/* ── Info box ── */
+.info-box{
+  background:var(--bg-2);
+  border:1px solid var(--border);
+  border-radius:4px;
+  padding:1.1rem 1.3rem;
+  margin-top:2rem;
+}
+.info-box h3{color:var(--white);margin-top:0;margin-bottom:.5rem}
+.info-box p{color:var(--fg-2);margin:0;font-size:.88rem}
+
+/* ── Footer ── */
+footer{
+  margin-top:4rem;
+  padding-top:1.5rem;
+  border-top:1px solid var(--border);
+  font-family:'IBM Plex Mono',monospace;
+  font-size:.68rem;
+  color:var(--fg-3);
+  display:flex;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:.8rem;
+}
+footer a{color:var(--fg-3);text-decoration:underline}
 </style>
 </head>
 <body>
-<div class="container">
-<aside class="side" aria-label="Navigation">
-  <div class="brand">MEMOGRAPH / v0.2.0</div>
-  <h3>Overview</h3>
-  <ul>
-    <li><a href="#about">About</a></li>
-    <li><a href="#streams">The 3 Streams</a></li>
-    <li><a href="#graph">The MemoGraph</a></li>
-  </ul>
-  <h3>Documentation</h3>
-  <ul>
-    <li><a href="getting-started.html">Getting Started</a></li>
-    <li><a href="api.html">API Reference</a></li>
-    <li><a href="security.html">Security &amp; Governance</a></li>
-    <li><a href="architecture.md">Architecture</a></li>
-    <li><a href="SPECS.md">Specs</a></li>
-  </ul>
-  <h3>Reference</h3>
-  <ul>
-    <li><a href="README.md">Project README</a></li>
-    <li><a href="CHANGELOG.md">Changelog</a></li>
-    <li><a href="https://github.com/artifact-opensource/memory_context_protocol">GitHub Repo</a></li>
-  </ul>
-  <h3>Setup</h3>
-  <ul>
-    <li><a href="../setup_project.sh">setup_project.sh</a></li>
-    <li><a href="../pyproject.toml">pyproject.toml</a></li>
-    <li><a href="tests/test_core.py">Tests (12/12 pass)</a></li>
-  </ul>
-  <div style="margin-top:1.5rem">
-    <span class="tag">LIVE</span><span class="tag">PROJECT</span><span class="tag">ENTERPRISE</span>
-  </div>
-</aside>
+<div class="layout">
 
-<main>
-<section class="hero" id="about" aria-label="Hero">
-  <div class="version">MEMOGRAPH PROTOCOL — v0.2.0 / INSTITUTIONAL MEMORY</div>
+<!-- Sidebar -->
+<nav class="sidebar" aria-label="Site navigation">
+  <div class="sidebar-brand">MEMOGRAPH / v0.2.0</div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">Overview</div>
+    <ul>
+      <li><a href="#about">About</a></li>
+      <li><a href="#streams">The 3 Streams</a></li>
+      <li><a href="#graph">The MemoGraph</a></li>
+    </ul>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">Documentation</div>
+    <ul>
+      <li><a href="getting-started.html">Getting Started</a></li>
+      <li><a href="api.html">API Reference</a></li>
+      <li><a href="security.html">Security &amp; Governance</a></li>
+      <li><a href="DOGFOOD_REPORT.md">Dogfood Report</a></li>
+      <li><a href="architecture.md">Architecture</a></li>
+      <li><a href="SPECS.md">Specs</a></li>
+    </ul>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">Reference</div>
+    <ul>
+      <li><a href="../README.md">Project README</a></li>
+      <li><a href="../CHANGELOG.md">Changelog</a></li>
+      <li><a href="https://github.com/artifact-opensource/memory_context_protocol" target="_blank">GitHub Repo</a></li>
+    </ul>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">Setup</div>
+    <ul>
+      <li><a href="../pyproject.toml">pyproject.toml</a></li>
+      <li><a href="../setup_project.sh">setup_project.sh</a></li>
+      <li><a href="../tests/test_core.py">Tests</a></li>
+    </ul>
+  </div>
+
+  <div class="sidebar-tags">
+    <span class="tag">LIVE</span>
+    <span class="tag">PROJECT</span>
+    <span class="tag">ENTERPRISE</span>
+  </div>
+</nav>
+
+<!-- Main -->
+<main class="main">
+
+<section class="hero" id="about">
+  <div class="hero-label">MEMOGRAPH PROTOCOL — v0.2.0 / INSTITUTIONAL MEMORY</div>
   <h1>Memory is not a folder.<br>Memory is topology.</h1>
-  <p class="lead">Three independent streams — Live, Project, Enterprise — that never merge physically but can assemble into temporary unified context. Every shard has a hash, an owner, a scope, and a lifecycle.</p>
-  <div class="meta">
-    <span>SHA256 SHARDS</span>
-    <span>3-DOMAIN ROUTING</span>
-    <span>TOKEN-CAPPED GRAPH</span>
-    <span>APPEND-ONLY AUDIT</span>
+  <p class="hero-sub">Three independent streams — Live, Project, Enterprise — that never merge physically but assemble into temporary unified context on demand. Every shard carries a hash, an owner, a scope, and a lifecycle.</p>
+  <div class="hero-meta">
+    <span class="hero-badge">SHA256 SHARDS</span>
+    <span class="hero-badge">3-DOMAIN ROUTING</span>
+    <span class="hero-badge">TOKEN-CAPPED GRAPH</span>
+    <span class="hero-badge">APPEND-ONLY AUDIT</span>
   </div>
 </section>
 
-<section id="streams" aria-label="The Three Streams">
-<h2>The Three Memory Streams</h2>
-<div class="cards">
-  <article class="card">
-    <h4>Live Conversational</h4>
-    <p>The present. Intent, decisions, constraints, working state. Shards have short lifetimes — some survive minutes, some are promoted to Project.</p>
-    <div class="label">DOMAIN: LIVE</div>
-  </article>
-  <article class="card">
-    <h4>Project Memory</h4>
-    <p>History, architecture, documents, data, agents. A project owns its identity and is not required to know other projects exist.</p>
-    <div class="label">DOMAIN: PROJECT</div>
-  </article>
-  <article class="card">
-    <h4>Enterprise / Org</h4>
-    <p>Policy, governance, standards, shared datasets, approval structures. Inherited by projects; never dumped globally.</p>
-    <div class="label">DOMAIN: ENTERPRISE</div>
-  </article>
-</div>
+<section id="streams">
+  <h2>The Three Memory Streams</h2>
+  <div class="cards">
+    <div class="card">
+      <h4>Live Conversational</h4>
+      <p>The present. Intent, decisions, constraints, working state. Short lifetimes — some survive minutes, some promoted to Project.</p>
+      <div class="card-domain">DOMAIN: LIVE</div>
+    </div>
+    <div class="card">
+      <h4>Project Memory</h4>
+      <p>History, architecture, documents, agents. A project owns its identity and is not required to know other projects exist.</p>
+      <div class="card-domain">DOMAIN: PROJECT</div>
+    </div>
+    <div class="card">
+      <h4>Enterprise / Org</h4>
+      <p>Policy, governance, standards, shared datasets. Inherited by projects; never dumped globally.</p>
+      <div class="card-domain">DOMAIN: ENTERPRISE</div>
+    </div>
+  </div>
 </section>
 
-<section id="graph" aria-label="The MemoGraph">
-<h2>The MemoGraph — Not One Database</h2>
-<p>Memory stops being a folder hierarchy when shards can reference other shards. A project decision points to the conversation that produced it; the conversation points to the research; the research points to the dataset; the dataset points to the model; the result points back to the decision.</p>
-<p>Every relationship is addressable. The graph is traversed with a bounded token budget (knapsack-constrained) — context is an execution layer, memory is persistence. They never become the same thing.</p>
+<section id="graph">
+  <h2>The MemoGraph</h2>
+  <p>Memory stops being a folder hierarchy when shards can reference other shards. A project decision points to the conversation that produced it; the conversation points to the research; the research points to the dataset; the result points back to the decision.</p>
+  <p>Every relationship is addressable. The graph is traversed with a bounded token budget — context is an execution layer, memory is persistence. They are not the same thing.</p>
 
-<h3>Core Primitives</h3>
+  <h3>Core Primitives</h3>
 <pre><code>MemoryShard(content, owner, scope, domain, parent_hash, permissions)
   → compute_hash() → SHA256 identity
 
-ContextRouter(query_context, weights={semantic:0.40, recency:0.25, authority:0.20, affinity:0.15})
+ContextRouter(weights={semantic:0.40, recency:0.25, authority:0.20, affinity:0.15})
   → score_shard() → permission + recency + authority + affinity
 
 MemoGraph.add_shard() / assemble_context(scored_shards, max_tokens)
@@ -143,41 +404,53 @@ MemoGraph.add_shard() / assemble_context(scored_shards, max_tokens)
 </section>
 
 <section aria-label="Documentation Index">
-<h2>Documentation Index</h2>
-<div class="toc-grid">
-  <a href="getting-started.html">
-    Getting Started <span class="desc">Install, first shard, promotion pipeline</span>
-  </a>
-  <a href="api.html">
-    API Reference <span class="desc">MemoryShard, ContextRouter, MemoGraph, lifecycle</span>
-  </a>
-  <a href="security.html">
-    Security <span class="desc">Threat model, audit trail, permission model</span>
-  </a>
-  <a href="architecture.md">
-    Architecture <span class="desc">3-stream topology, hash chain, retrieval specialization</span>
-  </a>
-  <a href="SPECS.md">
-    Specs <span class="desc">v0.2.0 state machine, HEKTOR/KV hybrid, token budget</span>
-  </a>
-  <a href="README.md">
-    README <span class="desc">Full architecture diagram, quick start, design principles</span>
-  </a>
-  <a href="CHANGELOG.md">
-    Changelog <span class="desc">v0.2.0 features, promotion pipeline, auditability</span>
-  </a>
-</div>
+  <h2>Documentation</h2>
+  <div class="doc-grid">
+    <a class="doc-card" href="getting-started.html">
+      <span class="doc-card-title">Getting Started</span>
+      <span class="doc-card-desc">Install, first shard, promotion pipeline</span>
+    </a>
+    <a class="doc-card" href="api.html">
+      <span class="doc-card-title">API Reference</span>
+      <span class="doc-card-desc">MemoryShard, ContextRouter, MemoGraph, lifecycle</span>
+    </a>
+    <a class="doc-card" href="security.html">
+      <span class="doc-card-title">Security</span>
+      <span class="doc-card-desc">Threat model, audit trail, permission model</span>
+    </a>
+    <a class="doc-card" href="DOGFOOD_REPORT.md">
+      <span class="doc-card-title">Dogfood Report</span>
+      <span class="doc-card-desc">Gateway integration test results</span>
+    </a>
+    <a class="doc-card" href="architecture.md">
+      <span class="doc-card-title">Architecture</span>
+      <span class="doc-card-desc">3-stream topology, hash chain, retrieval specialization</span>
+    </a>
+    <a class="doc-card" href="SPECS.md">
+      <span class="doc-card-title">Specs</span>
+      <span class="doc-card-desc">v0.2.0 state machine, token budget, adapters</span>
+    </a>
+    <a class="doc-card" href="../README.md">
+      <span class="doc-card-title">README</span>
+      <span class="doc-card-desc">Architecture diagram, quick start, design principles</span>
+    </a>
+    <a class="doc-card" href="../CHANGELOG.md">
+      <span class="doc-card-title">Changelog</span>
+      <span class="doc-card-desc">v0.2.0 release notes</span>
+    </a>
+  </div>
 </section>
 
-<section aria-label="Dogfood Note" style="background:linear-gradient(135deg,var(--surface),var(--surface-2));border:1px solid var(--border);border-radius:12px;padding:1.2rem 1.5rem;">
-<h3 style="margin-top:0">Dogfood Note — Gateway Integration</h3>
-<p style="margin-bottom:0">Memograph is configured as the <strong>exclusive context pool</strong> for this gateway, with main Hermes context preserved as a safe-mode fallback (never overwritten, only dormant). Every retrieval/store/promotion event writes to an append-only audit trail. If Memograph fails — file mutation error, storage corruption, graph traversal failure — the agent falls back to native context and logs the failure, rather than going offline.</p>
-</section>
+<div class="info-box">
+  <h3>Dogfood</h3>
+  <p>Memograph is the exclusive primary context pool on this machine. Main context preserved as dormant safe-mode fallback. Every operation writes to an append-only audit trail. File mutation failures are caught, logged, and handled without going offline.</p>
+</div>
 
 <footer>
-  <div>Memograph v0.2.0 · <a href="https://github.com/artifact-opensource/memory_context_protocol">artifact-opensource</a> · <a href="https://hermes-agent.nousresearch.com/docs">Hermes docs</a></div>
-  <div>Built surgical. Audited. No context wall.</div>
+  <span>Memograph v0.2.0 &middot; <a href="https://github.com/artifact-opensource/memory_context_protocol">artifact-opensource</a></span>
+  <span>Built surgical. Audited. No context wall.</span>
 </footer>
+
 </main>
 </div>
 </body>
