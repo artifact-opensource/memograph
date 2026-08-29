@@ -8,6 +8,7 @@ chronological memory shards.
 from typing import List, Dict, Any, Optional, Tuple
 
 from memograph.core.shard import MemoryShard, ShardDomain
+from memograph.core.types import ContentType, RetrievalEngine
 from memograph.engines.base import RetrievalResult
 from memograph.engines.base import RetrievalAdapter
 

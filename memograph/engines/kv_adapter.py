@@ -5,10 +5,10 @@ Provides high-performance key-value access for graph state,
 shard metadata, and frequently-accessed memory objects.
 """
 
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 from memograph.core.shard import MemoryShard
-from memograph.core.types import RetrievalEngine
+from memograph.core.types import ContentType, RetrievalEngine
 from memograph.engines.base import RetrievalResult, RetrievalAdapter
 
 

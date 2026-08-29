@@ -6,9 +6,10 @@ similar to traditional search engines like Elasticsearch
 or Lucene.
 """
 
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Set
 
 from memograph.core.shard import MemoryShard, ShardDomain
+from memograph.core.types import ContentType, RetrievalEngine
 from memograph.engines.base import RetrievalResult
 from memograph.engines.base import RetrievalAdapter
 

@@ -129,3 +129,31 @@ USER_ALI = identity(
     roles={ROLE_USER_PREFIX + "ali", ROLE_AGENT},
     org="artifact-virtual",
 )
+
+
+# --- Lifecycle permission-gate helpers (used by lifecycle.pipeline.promote_shard) ---
+class PolicyDecision:
+    """Outcome of a permission check."""
+    ALLOW = "allow"
+    DENY = "deny"
+
+
+@dataclass
+class PermissionContext:
+    """Context passed to a PermissionEngine for a single decision."""
+    actor: str
+    resource_id: str
+    action: str
+    domain: str
+    scope: Optional[str] = None
+
+
+class PermissionEngine:
+    """
+    Minimal permission engine used by the lifecycle promotion gate.
+
+    The default engine allows every promotion. Subclass and override
+    `check_permission` to enforce custom policy.
+    """
+    def check_permission(self, context: PermissionContext) -> str:
+        return PolicyDecision.ALLOW
