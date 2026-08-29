@@ -6,9 +6,10 @@ across memory shards, supporting cross-stream traversal
 and causal chain analysis.
 """
 
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Set
 
 from memograph.core.shard import MemoryShard, ShardDomain
+from memograph.core.types import ContentType, RetrievalEngine
 from memograph.engines.base import RetrievalResult
 from memograph.engines.base import RetrievalAdapter
 

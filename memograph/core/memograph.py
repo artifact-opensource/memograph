@@ -137,7 +137,7 @@ class MemoGraph:
         return [self.nodes[h] for h in self.reverse_edges.get(shard_hash, []) if h in self.nodes]
 
     def get_lineage(self, shard_hash: str, max_depth: int = 10) -> List[MemoryShard]:
-        lineage, visited, current, depth = [], {shard_hash}, shard_hash, 0
+        lineage, visited, current, depth = [], set(), shard_hash, 0
         while current and depth < max_depth and current not in visited:
             visited.add(current)
             s = self.get_shard(current)
@@ -284,9 +284,6 @@ class MemoGraph:
         }
 
         # Atomic write via temp file
-        dir_fd = None
-        if dir_path:
-            dir_fd = os.open(dir_path, os.O_RDONLY | os.O_CLOEXEC)
         tmp_fd, tmp_path = tempfile.mkstemp(
             dir=dir_path or os.path.dirname(path) or ".",
             prefix=".memograph_tmp_",
@@ -297,16 +294,13 @@ class MemoGraph:
                 json.dump(data, f)
                 f.flush()
                 os.fsync(f.fileno())
-            os.rename(tmp_path, path)  # Atomic on POSIX
+            os.replace(tmp_path, path)  # Atomic on POSIX; overwrites on Windows
         except Exception:
             try:
                 os.unlink(tmp_path)
             except OSError:
                 pass
             raise
-        finally:
-            if dir_fd is not None:
-                os.close(dir_fd)
 
     @classmethod
     def load(cls, path: str, enforce_schema: bool = True) -> "MemoGraph":

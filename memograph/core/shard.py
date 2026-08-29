@@ -171,7 +171,8 @@ class MemoryShard:
                parent_hash: Optional[str] = None,
                permissions: Optional[List[str]] = None,
                content_type: ContentType = ContentType.CONVERSATIONAL,
-               timestamp: Optional[float] = None) -> "MemoryShard":
+               timestamp: Optional[float] = None,
+               version: int = 1) -> "MemoryShard":
         """Factory method for creating new shards."""
         return cls(
             content=content,
@@ -181,7 +182,7 @@ class MemoryShard:
             parent_hash=parent_hash,
             permissions=permissions or ["*"],
             timestamp=timestamp or time.time(),
-            version=1,
+            version=version,
             content_type=content_type
         )
     

@@ -18,7 +18,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set
 
 from memograph.core.shard import MemoryShard, ShardDomain
 from memograph.core.events import MemoryEvent, EventType

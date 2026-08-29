@@ -16,7 +16,8 @@ import os
 from typing import Dict, List, Optional, Any
 from datetime import datetime
 
-from memograph.core.shard import MemoryShard
+from memograph.core.shard import MemoryShard, ShardDomain
+from memograph.core.types import ContentType
 from memograph.core.events import MemoryEvent
 
 

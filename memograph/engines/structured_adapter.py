@@ -8,6 +8,7 @@ and structural pattern matching for code and structured data.
 from typing import List, Dict, Any, Optional
 
 from memograph.core.shard import MemoryShard, ShardDomain
+from memograph.core.types import ContentType, RetrievalEngine
 from memograph.engines.base import RetrievalResult
 from memograph.engines.base import RetrievalAdapter
 

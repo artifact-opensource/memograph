@@ -22,11 +22,17 @@ from memograph.core.shard import MemoryShard, ShardDomain, ContentType
 from memograph.core.events import MemoryEvent, EventType
 from memograph.core.events import EventType as LifecycleEventType
 try:
-    from memograph.auth.permissions import is_authorized, identity, Identity
+    from memograph.auth.permissions import (
+        is_authorized, identity, Identity,
+        PermissionEngine, PermissionContext, PolicyDecision,
+    )
 except ImportError:
     is_authorized = lambda *a, **k: True
     identity = lambda **k: None
     Identity = None
+    PermissionEngine = None
+    PermissionContext = None
+    PolicyDecision = None
 
 
 class TransitionType(Enum):
@@ -101,6 +107,8 @@ class LifecyclePipeline:
             return LifecycleResult(
                 success=False,
                 source_shard=shard,
+                target_shard=None,
+                event=None,
                 error=f"Invalid promotion from {shard.domain.value} to {target_domain.value}"
             )
         
@@ -118,6 +126,8 @@ class LifecyclePipeline:
                 return LifecycleResult(
                     success=False,
                     source_shard=shard,
+                    target_shard=None,
+                    event=None,
                     error=f"Permission denied for promotion by {actor}"
                 )
         

@@ -242,22 +242,25 @@ class MemographAgentSession:
             )
 
     def _do_retrieve(self, req: ToolRequest, domain: ShardDomain) -> ToolResponse:
+        # Only constrain by scope if the caller explicitly provided one.
+        # Do NOT fall back to the domain name — that would filter out every
+        # shard whose scope is a project id (e.g. "payments") rather than the
+        # literal domain string ("project").
         query = ContextQuery(
             text=req.query,
-            scope=req.scope or req.domain,
+            scope=req.scope,
             max_tokens=req.max_tokens
         )
         candidates = self.graph.query_by_domain(domain)
         scored = self.router.route(candidates, query)
         selected = self.graph.assemble_context(
             [(s, score) for s, score in scored],
-            query,
             max_tokens=req.max_tokens
         )
 
         # Build context preserving stream boundaries
         by_domain: Dict[str, List[Dict]] = {domain.value: []}
-        for shard in selected:
+        for shard in selected.shards:
             d = shard.to_dict()
             d["content"] = shard.content
             by_domain[domain.value].append(d)
@@ -287,6 +290,7 @@ class MemographAgentSession:
 
         # Log as event
         event = MemoryEvent.create(
+            event_id=int(time.time() * 1000000),
             event_type=EventType.CREATED,
             actor=self.default_owner,
             scope=req.scope or self.session_id,
