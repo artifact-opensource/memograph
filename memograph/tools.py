@@ -252,7 +252,9 @@ class MemographAgentSession:
             max_tokens=req.max_tokens
         )
         candidates = self.graph.query_by_domain(domain)
-        scored = self.router.route(candidates, query)
+        result = self.router.retrieve(query, candidates=candidates,
+                                     max_results=req.max_results)
+        scored = [(s, sc) for s, sc in zip(result.shards, result.scores)]
         selected = self.graph.assemble_context(
             [(s, score) for s, score in scored],
             max_tokens=req.max_tokens

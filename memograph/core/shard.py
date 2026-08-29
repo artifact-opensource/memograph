@@ -23,6 +23,13 @@ from dataclasses import dataclass, field, asdict
 from enum import Enum, auto
 from typing import Dict, Any, Optional, List
 
+# ContentType is the single canonical definition in core.types. Re-export it
+# here so existing `from memograph.core.shard import ContentType` imports keep
+# working, and there is exactly ONE ContentType class across the package
+# (previously shard.py defined its own duplicate, which broke enum-identity
+# based lookups such as AdapterRegistry.get_adapters).
+from memograph.core.types import ContentType  # noqa: E402,F401
+
 
 class ShardDomain(Enum):
     """
@@ -38,18 +45,6 @@ class ShardDomain(Enum):
     LIVE = "live"
     PROJECT = "project"
     ENTERPRISE = "enterprise"
-
-
-class ContentType(Enum):
-    """Content classification for heterogeneous retrieval."""
-    CONVERSATIONAL = auto()
-    SOURCE_CODE = auto()
-    DOCUMENT = auto()
-    DATASET = auto()
-    GRAPH = auto()
-    DECISION = auto()
-    POLICY = auto()
-    EPISTEMIC = auto()  # Meta-knowledge, reasoning traces
 
 
 class AccessLevel(Enum):
@@ -131,7 +126,6 @@ class MemoryShard:
             "domain": self.domain.value,
             "parent_hash": self.parent_hash,
             "permissions": sorted(self.permissions),
-            "timestamp": self.timestamp,
             "version": self.version,
             "content_type": self.content_type.name,
         }

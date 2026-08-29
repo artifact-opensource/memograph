@@ -118,3 +118,55 @@ class AdapterRegistry:
     def list_adapters(self) -> List[str]:
         """List all registered adapter names."""
         return list(self._adapter_by_name.keys())
+
+
+# ---------------------------------------------------------------------------
+# Default adapter fleet
+# ---------------------------------------------------------------------------
+# The seven retrieval adapters described in the CHANGELOG are instantiated and
+# registered here so ContextRouter can dispatch by ContentType. Each adapter
+# declares which content types it handles via `supports_content_type`; the
+# registry maps those types to the adapter instance.
+def register_default_adapters(registry: Optional["AdapterRegistry"] = None) -> "AdapterRegistry":
+    """
+    Instantiate and register the built-in retrieval adapters.
+
+    Returns the (populated) AdapterRegistry. Idempotent: calling it twice on
+    the same registry does not create duplicates.
+    """
+    from memograph.engines.semantic_adapter import SemanticAdapter, HektorAdapter
+    from memograph.engines.structured_adapter import StructuredAdapter
+    from memograph.engines.graph_adapter import GraphAdapter
+    from memograph.engines.temporal_adapter import TemporalAdapter
+    from memograph.engines.lexical_adapter import LexicalAdapter
+    from memograph.engines.kv_adapter import KVAdapter
+
+    reg = registry if registry is not None else AdapterRegistry()
+    if reg.list_adapters():
+        return reg  # already populated
+
+    reg.register(SemanticAdapter(), content_types=[
+        ContentType.CONVERSATIONAL, ContentType.DECISION, ContentType.EPISTEMIC,
+    ])
+    reg.register(HektorAdapter(), content_types=[
+        ContentType.CONVERSATIONAL, ContentType.DECISION, ContentType.EPISTEMIC,
+    ])
+    reg.register(StructuredAdapter(), content_types=[
+        ContentType.SOURCE_CODE,
+    ])
+    reg.register(GraphAdapter(), content_types=[
+        ContentType.GRAPH, ContentType.POLICY, ContentType.DECISION,
+    ])
+    reg.register(TemporalAdapter(), content_types=[
+        ContentType.DATASET, ContentType.EPISTEMIC,
+    ])
+    reg.register(LexicalAdapter(), content_types=[
+        ContentType.DOCUMENT, ContentType.CONVERSATIONAL,
+    ])
+    reg.register(KVAdapter(), content_types=list(ContentType))  # universal fallback
+    return reg
+
+
+# Module-level default fleet, ready for ContextRouter to use.
+default_registry = AdapterRegistry()
+register_default_adapters(default_registry)

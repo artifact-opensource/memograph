@@ -73,13 +73,17 @@ class MemoGraph:
     Writes are atomic (temp file → rename) for transactional integrity.
     """
 
-    def __init__(self, schema_version: int = SCHEMA_VERSION):
+    def __init__(self, schema_version: int = SCHEMA_VERSION,
+                 router: Optional["ContextRouter"] = None):
         self.schema_version = schema_version
         self.nodes: Dict[str, MemoryShard] = {}
         self.edges: Dict[str, List[str]] = defaultdict(list)
         self.reverse_edges: Dict[str, List[str]] = defaultdict(list)
         self.domain_index: Dict[ShardDomain, Set[str]] = defaultdict(set)
         self.scope_index: Dict[str, Set[str]] = defaultdict(set)
+        # Retrieval-adapter fleet used to index shards on ingest. Defaults to
+        # the module-level router (which holds the populated AdapterRegistry).
+        self.router = router
 
     # ── Core mutation ────────────────────────────────────────────────
 
@@ -93,6 +97,14 @@ class MemoGraph:
         if shard.parent_hash and shard.parent_hash in self.nodes:
             self.edges[shard.parent_hash].append(shard.shard_hash)
             self.reverse_edges[shard.shard_hash].append(shard.parent_hash)
+        # Index into the retrieval-adapter fleet (lazy import avoids cycle).
+        try:
+            from memograph.core.router import router as _default_router
+            rtr = self.router if self.router is not None else _default_router
+            if rtr is not None:
+                rtr.index_shard(shard)
+        except Exception:
+            pass  # indexing must never block ingestion
         return shard.shard_hash
 
     def authorize_add(self, shard: MemoryShard, allowed_orgs: Optional[Set[str]] = None) -> bool:

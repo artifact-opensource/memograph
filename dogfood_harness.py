@@ -155,16 +155,22 @@ try:
     check("append-only .audit_trail/session_audit.json", os.path.exists(audit_path),
           "expected by DOGFOOD_REPORT, production.md")
     # (c) 7 retrieval adapters actually wired into the registry/router
-    from memograph.engines.base import AdapterRegistry
+    from memograph.engines.base import AdapterRegistry, default_registry
     reg = AdapterRegistry()
-    check("AdapterRegistry populated at runtime", len(reg.list_adapters()) > 0,
-          f"registered={reg.list_adapters()} — CHANGELOG claims 7 adapters; "
-          f"none are registered or used by ContextRouter")
-    # also: does the router reference any adapter/registry?
+    from memograph.engines.base import register_default_adapters
+    register_default_adapters(reg)
+    check("AdapterRegistry populated at runtime", len(reg.list_adapters()) >= 7,
+          f"registered={reg.list_adapters()} — CHANGELOG claims 7 adapters")
+    # router must actually use the registry to index + dispatch
     rr = ContextRouter()
-    check("ContextRouter uses adapters/registry",
-          not (hasattr(rr, "_registry") and rr._registry),
-          "router scores inline; adapters are never invoked")
+    check("ContextRouter holds a populated registry",
+          len(rr.registry.list_adapters()) >= 7,
+          "router dispatches by ContentType via AdapterRegistry")
+    # exercise dispatch: index a shard, confirm an adapter accepts it
+    rr.index_shard(s)
+    adp = rr.adapter_for(s.content_type)
+    check("router resolves adapter for a shard's content type",
+          adp is not None, f"adapter={getattr(adp,'name',None)}")
     try:
         # build a real v1-style file manually: schema 1, no reverse_edges/index
         v1 = {"_memograph_schema": 1,

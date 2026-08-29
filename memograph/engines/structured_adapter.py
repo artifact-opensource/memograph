@@ -29,7 +29,7 @@ class StructuredAdapter(RetrievalAdapter):
         self._symbol_map: Dict[str, List[str]] = {}
     
     def index_shard(self, shard: MemoryShard) -> bool:
-        if shard.content_type not in (ContentType.SOURCE_CODE, ContentType.STRUCTURED):
+        if shard.content_type not in (ContentType.SOURCE_CODE,):
             return False
         # In a real implementation, would parse AST and store symbols
         return True
