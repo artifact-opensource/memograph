@@ -3,7 +3,7 @@ Retrieval adapters for heterogeneous memory retrieval.
 
 Each memory shard can have a different content type, requiring
 different retrieval strategies. This module provides adapters for:
-- Semantic search (HEKTOR/embedding-based)
+- Semantic search (pluggable vector backend)
 - Structured data (AST/symbol-based for code)
 - Lexical search (full-text)
 - Temporal indexing (time-series)
@@ -15,7 +15,7 @@ shard and content type.
 """
 
 from memograph.engines.base import RetrievalAdapter
-from memograph.engines.semantic_adapter import SemanticAdapter, HektorAdapter
+from memograph.engines.semantic_adapter import SemanticAdapter
 from memograph.engines.structured_adapter import StructuredAdapter
 from memograph.engines.graph_adapter import GraphAdapter
 from memograph.engines.temporal_adapter import TemporalAdapter
@@ -29,6 +29,5 @@ __all__ = [
     "GraphAdapter",
     "TemporalAdapter",
     "LexicalAdapter",
-    "HektorAdapter",
     "KVAdapter",
 ]

@@ -157,27 +157,27 @@ The ContextRouter is the intelligence layer. It evaluates memory based on multip
 
 | Dimension | Weight | Description |
 |-----------|--------|-------------|
-| **semantic** | 0.40 | Cosine similarity to query (embedding-based) |
+| **semantic** | 0.40 | Retrieved score supplied by the configured backend |
 | **recency** | 0.25 | Exponential decay based on age |
 | **authority** | 0.20 | Domain-level trust (LIVE=0.5, PROJECT=0.8, ENTERPRISE=1.0) |
 | **affinity** | 0.15 | Project/organization proximity |
 
 Additional scoring dimensions (configurable): provenance, temporal validity, access policy, ownership.
 
-The router does NOT decide what the agent retrieves. It ranks candidates by contextual score. The agent decides.
+The router does NOT decide what the agent retrieves. It ranks candidates by contextual score. The agent decides. The standalone Python router currently uses a lightweight heuristic; Symbiote's integration supplies BM25/sparse TF-IDF VDB scores plus domain authority and scope affinity. Dense embeddings require an explicitly configured backend and are not bundled.
 
 ## Heterogeneous Retrieval
 
 | Content Type | Engine | Retrieval Method |
 |-------------|--------|-----------------|
-| CONVERSATIONAL | Semantic | Vector similarity (HEKTOR) |
+| CONVERSATIONAL | Semantic | Configured semantic backend; native Symbiote bridge uses sparse VDB ranking |
 | SOURCE_CODE | Structured | AST/symbol lookup |
 | DOCUMENT | Lexical | Full-text search |
 | DATASET | Temporal | Time-series/range queries |
-| DECISION | Semantic | Vector similarity |
+| DECISION | Semantic | Configured semantic backend; native Symbiote integration uses sparse VDB ranking |
 | POLICY | Graph | Relationship traversal |
 | GRAPH | Graph | Graph traversal |
-| EPISTEMIC | Semantic | Meta-knowledge vectors |
+| EPISTEMIC | Semantic | Meta-knowledge through the configured retrieval backend |
 
 The `AdapterRegistry` maps content types to specialized engines. The router delegates to the appropriate adapter based on shard content type.
 
@@ -282,12 +282,8 @@ enable_audit = true
 default_access_level = "project"
 
 [tool.memograph.engine.semantic]
-model = "text-embedding-3-small"
+backend = "optional"
 namespace = "memograph"
-
-[tool.memograph.engine.hektor]
-endpoint = "http://localhost:8080"
-api_key = ""
 
 [tool.memograph.auth]
 strict_mode = false
@@ -329,7 +325,6 @@ default_policy = "allow"
 | `RetrievalAdapter` | Abstract base for retrieval |
 | `AdapterRegistry` | Central adapter registry |
 | `SemanticAdapter` | Vector similarity search |
-| `HektorAdapter` | HEKTOR-specific semantic search |
 | `GraphAdapter` | Graph traversal queries |
 | `TemporalAdapter` | Time-series queries |
 | `LexicalAdapter` | Full-text search |

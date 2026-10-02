@@ -130,7 +130,7 @@ class RetrievalAdapter:
 
 ### Adapters
 
-- `SemanticAdapter` / `HektorAdapter` — vector similarity
+- `SemanticAdapter` — pluggable vector similarity interface
 - `StructuredAdapter` — AST/symbol lookup
 - `LexicalAdapter` — full-text search
 - `TemporalAdapter` — time-series queries

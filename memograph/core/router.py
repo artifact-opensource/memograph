@@ -3,7 +3,7 @@ Context Router: Multi-dimensional context scoring and memory assembly.
 
 Routes queries to the most relevant memory shards across domains.
 Uses a weighted scoring system across:
-- Semantic similarity (embedding-based)
+- Semantic relevance (from a configured retrieval backend)
 - Recency (exponential decay)
 - Authority (domain-level trust)
 - Affinity (project/organization proximity)
@@ -20,6 +20,7 @@ sufficient context for the answer.
 """
 
 import math
+import logging
 import time
 from dataclasses import dataclass, field
 from typing import List, Dict, Any, Optional, Tuple, Set
@@ -28,6 +29,8 @@ from memograph.core.shard import MemoryShard, ShardDomain
 from memograph.core.events import MemoryEvent, EventType
 from memograph.core.types import ContentType, AccessLevel, RetrievalEngine
 from memograph.engines.base import RetrievalResult, RetrievalAdapter, AdapterRegistry
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -102,7 +105,7 @@ class ContextRouter:
             try:
                 adapter.index_shard(shard)
             except Exception:
-                # An adapter failing to index must not break memory ingestion.
+                logger.exception("Adapter %s failed to index shard %s", adapter.name, shard.shard_hash)
                 continue
 
     def retrieve(self, query: "ContextQuery",

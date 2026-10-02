@@ -22,6 +22,8 @@ Usage as a Hermes tool:
 
 import time
 import json
+import logging
+import shutil
 from dataclasses import dataclass, field, asdict
 from typing import Dict, Any, Optional, List, Callable
 from enum import Enum
@@ -31,6 +33,8 @@ from memograph.core.events import MemoryEvent, EventType
 from memograph.core.memograph import MemoGraph, ContextEnvelope
 from memograph.core.router import ContextRouter, ContextQuery
 from memograph.lifecycle.pipeline import LifecyclePipeline
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -179,30 +183,46 @@ class MemographAgentSession:
         import os
         session_file = os.path.join(self.storage_dir, f"{self.session_id}.json")
         if os.path.exists(session_file):
-            # Restore session
-            self.graph = MemoGraph.load(session_file)
+            try:
+                self.graph = MemoGraph.load(session_file)
+            except Exception:
+                logger.exception("Unable to load Memograph session graph %s", session_file)
+                backup_path = f"{session_file}.corrupt-{int(time.time())}.bak"
+                try:
+                    shutil.copy2(session_file, backup_path)
+                    logger.error("Preserved unreadable Memograph graph at %s", backup_path)
+                except OSError:
+                    logger.exception("Unable to preserve damaged Memograph graph %s", session_file)
+                self.graph = MemoGraph()
             # Reconstruct events from shards
             for shard in self.graph.nodes.values():
                 if shard.content.get("_is_event"):
-                    self._event_log.append(MemoryEvent(
-                        event_id=shard.content.get("event_id", 0),
-                        event_type=EventType(shard.content.get("event_type", "created")),
-                        actor=shard.owner,
-                        scope=shard.scope,
-                        parent_hash=shard.parent_hash or "",
-                        previous_state_hash=shard.content.get("prev_hash", ""),
-                        new_state_hash=shard.shard_hash,
-                        reason=shard.content.get("reason", ""),
-                        evidence=shard.content.get("evidence", {}),
-                        model_version=shard.content.get("model_version", "")
-                    ))
+                    try:
+                        self._event_log.append(MemoryEvent(
+                            event_id=shard.content.get("event_id", 0),
+                            event_type=EventType(shard.content.get("event_type", "created")),
+                            actor=shard.owner,
+                            scope=shard.scope,
+                            parent_hash=shard.parent_hash or "",
+                            previous_state_hash=shard.content.get("prev_hash", ""),
+                            new_state_hash=shard.shard_hash,
+                            reason=shard.content.get("reason", ""),
+                            evidence=shard.content.get("evidence", {}),
+                            model_version=shard.content.get("model_version", "")
+                        ))
+                    except (KeyError, TypeError, ValueError):
+                        logger.exception("Skipping malformed audit event shard %s", shard.shard_hash)
         # Ensure storage dir exists
         os.makedirs(self.storage_dir, exist_ok=True)
 
     def save(self):
         """Persist session to disk."""
         session_file = f"{self.storage_dir}/{self.session_id}.json"
-        self.graph.save(session_file)
+        try:
+            self.graph.save(session_file)
+        except Exception:
+            logger.exception("Unable to save Memograph session graph %s", session_file)
+            raise
 
     def execute(self, request: ToolRequest) -> ToolResponse:
         """Execute a tool request and return an injection-ready response."""

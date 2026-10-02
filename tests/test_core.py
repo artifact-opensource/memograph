@@ -4,6 +4,7 @@ Test suite for Memograph core primitives.
 
 import pytest
 import time
+import json
 
 from memograph.core.shard import MemoryShard, ShardDomain, ContentType
 from memograph.core.events import MemoryEvent, EventType
@@ -91,6 +92,34 @@ class TestMemoryShard:
         assert data["domain"] == "project"
         assert data["content_type"] == "DECISION"
 
+    def test_from_dict_preserves_identity_and_empty_permissions(self):
+        shard = MemoryShard.create(
+            content={"decision": "keep tenant data separate"},
+            owner="agent-1",
+            scope="project:alpha",
+            domain=ShardDomain.PROJECT,
+            permissions=[],
+            content_type=ContentType.DECISION,
+            timestamp=1_790_000_000,
+            version=4,
+        )
+
+        restored = MemoryShard.from_dict(shard.to_dict())
+
+        assert restored.shard_hash == shard.shard_hash
+        assert restored.timestamp == shard.timestamp
+        assert restored.version == shard.version
+        assert restored.content_type == shard.content_type
+        assert restored.permissions == []
+
+    def test_from_dict_rejects_tampered_hash(self):
+        shard = MemoryShard.create(content={"fact": "original"}, owner="agent", scope="test")
+        data = shard.to_dict()
+        data["content"] = {"fact": "modified"}
+
+        with pytest.raises(ValueError, match="Shard hash mismatch"):
+            MemoryShard.from_dict(data)
+
 
 class TestContextRouter:
     """Tests for context routing."""
@@ -149,6 +178,27 @@ class TestMemoGraph:
         assert len(lineage) == 2
         assert lineage[0].shard_hash == shard2.shard_hash
         assert lineage[1].shard_hash == shard1.shard_hash
+
+    def test_load_skips_corrupt_shards_and_dangling_edges(self, tmp_path, caplog):
+        graph = MemoGraph()
+        parent = MemoryShard.create(content={"fact": "valid parent"}, owner="agent", scope="project:test")
+        child = parent.with_version(2)
+        graph.add_shard(parent)
+        graph.add_shard(child)
+        snapshot = tmp_path / "graph.json"
+        graph.save(str(snapshot))
+
+        data = json.loads(snapshot.read_text())
+        data["nodes"][child.shard_hash]["content"] = {"fact": "tampered child"}
+        data["edges"][parent.shard_hash].append("missing-child")
+        snapshot.write_text(json.dumps(data))
+
+        restored = MemoGraph.load(str(snapshot))
+
+        assert list(restored.nodes) == [parent.shard_hash]
+        assert restored.edges[parent.shard_hash] == []
+        assert "Skipping invalid shard" in caplog.text
+        assert "Skipping dangling edge" in caplog.text
     
     def test_assemble_context_token_budget(self):
         """Context should respect token budget."""

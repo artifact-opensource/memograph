@@ -211,7 +211,7 @@ memograph/
 ├── lifecycle/      # Promotion, demotion, eviction, context application
 ├── engines/        # Heterogeneous retrieval adapters
 │   ├── base.py              # RetrievalAdapter interface + AdapterRegistry
-│   ├── semantic_adapter.py  # Vector similarity (HEKTOR)
+│   ├── semantic_adapter.py  # Pluggable semantic/vector adapter interface
 │   ├── structured_adapter.py # AST/symbol lookup for code
 │   ├── graph_adapter.py     # Graph traversal
 │   ├── temporal_adapter.py   # Time-series queries
@@ -250,7 +250,7 @@ memograph/
 | TTL-based eviction / forgetting | ✅ |
 | Permission engine | ✅ |
 | Heterogeneous retrieval adapters | ✅ |
-| HEKTOR / vector similarity | ✅ |
+| External dense vector backend | Optional; not bundled |
 | Policy-gated promotion | ✅ |
 | Explainable decision provenance | ✅ |
 | Multi-organization scope isolation | ✅ |

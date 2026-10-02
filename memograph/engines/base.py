@@ -134,7 +134,7 @@ def register_default_adapters(registry: Optional["AdapterRegistry"] = None) -> "
     Returns the (populated) AdapterRegistry. Idempotent: calling it twice on
     the same registry does not create duplicates.
     """
-    from memograph.engines.semantic_adapter import SemanticAdapter, HektorAdapter
+    from memograph.engines.semantic_adapter import SemanticAdapter
     from memograph.engines.structured_adapter import StructuredAdapter
     from memograph.engines.graph_adapter import GraphAdapter
     from memograph.engines.temporal_adapter import TemporalAdapter
@@ -146,9 +146,6 @@ def register_default_adapters(registry: Optional["AdapterRegistry"] = None) -> "
         return reg  # already populated
 
     reg.register(SemanticAdapter(), content_types=[
-        ContentType.CONVERSATIONAL, ContentType.DECISION, ContentType.EPISTEMIC,
-    ])
-    reg.register(HektorAdapter(), content_types=[
         ContentType.CONVERSATIONAL, ContentType.DECISION, ContentType.EPISTEMIC,
     ])
     reg.register(StructuredAdapter(), content_types=[

@@ -35,7 +35,7 @@ class ContentType(Enum):
 
 class RetrievalEngine(Enum):
     """Available retrieval engine types for heterogeneous memory."""
-    SEMANTIC = "semantic"      # HEKTOR-based vector search
+    SEMANTIC = "semantic"      # Configured semantic/vector backend
     STRUCTURED = "structured"  # Symbol/AST-based for code
     LEXICAL = "lexical"        # Full-text search
     TEMPORAL = "temporal"      # Time-series / interval indexing

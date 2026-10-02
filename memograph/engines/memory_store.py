@@ -12,6 +12,7 @@ This is the persistence layer - separate from retrieval logic.
 """
 
 import json
+import logging
 import os
 from typing import Dict, List, Optional, Any
 from datetime import datetime
@@ -19,6 +20,8 @@ from datetime import datetime
 from memograph.core.shard import MemoryShard, ShardDomain
 from memograph.core.types import ContentType
 from memograph.core.events import MemoryEvent
+
+logger = logging.getLogger(__name__)
 
 
 class MemoryStore:
@@ -54,8 +57,12 @@ class MemoryStore:
             
             # Write shard file
             shard_path = os.path.join(scope_dir, f"{shard.shard_hash}.json")
-            with open(shard_path, "w") as f:
+            tmp_path = shard_path + ".tmp"
+            with open(tmp_path, "w", encoding="utf-8") as f:
                 json.dump(shard.to_dict(), f, indent=2)
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(tmp_path, shard_path)
             
             # Update index
             self.index_cache[shard.shard_hash] = {
@@ -67,7 +74,8 @@ class MemoryStore:
             self._save_index()
             
             return True
-        except Exception as e:
+        except Exception:
+            logger.exception("Failed to save memory shard %s", shard.shard_hash)
             return False
     
     def get_shard(self, shard_hash: str) -> Optional[MemoryShard]:
@@ -79,28 +87,27 @@ class MemoryStore:
         try:
             with open(info["path"], "r") as f:
                 data = json.load(f)
-                return MemoryShard.create(
-                    content=data["content"],
-                    owner=data["owner"],
-                    scope=data["scope"],
-                    domain=ShardDomain(data["domain"]),
-                    parent_hash=data.get("parent_hash"),
-                    permissions=data.get("permissions", ["*"]),
-                    timestamp=data["timestamp"],
-                    version=data["version"],
-                    content_type=ContentType(data.get("content_type", "CONVERSATIONAL"))
-                )
-        except Exception:
+                shard = MemoryShard.from_dict(data)
+                if shard.shard_hash != shard_hash:
+                    raise ValueError(f"Shard index hash mismatch: expected {shard_hash}")
+                return shard
+        except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError):
+            logger.exception("Failed to load memory shard %s", shard_hash)
             return None
     
     def save_event(self, event: MemoryEvent) -> bool:
         """Append an event to the event log."""
         try:
             event_path = os.path.join(self.events_path, f"{event.id}.json")
-            with open(event_path, "w") as f:
+            tmp_path = event_path + ".tmp"
+            with open(tmp_path, "w", encoding="utf-8") as f:
                 json.dump(event.to_dict(), f, indent=2)
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(tmp_path, event_path)
             return True
         except Exception:
+            logger.exception("Failed to save memory event %s", event.id)
             return False
     
     def list_shards(self, domain: Optional[str] = None, 
@@ -132,14 +139,24 @@ class MemoryStore:
     def _load_index(self) -> Dict[str, Any]:
         index_file = os.path.join(self.index_path, "index.json")
         if os.path.exists(index_file):
-            with open(index_file, "r") as f:
-                return json.load(f)
+            try:
+                with open(index_file, "r", encoding="utf-8") as f:
+                    index = json.load(f)
+                if not isinstance(index, dict):
+                    raise ValueError("index root must be an object")
+                return index
+            except (OSError, json.JSONDecodeError, ValueError):
+                logger.exception("Memory index is unreadable; starting with an empty index cache: %s", index_file)
         return {}
     
     def _save_index(self) -> None:
         index_file = os.path.join(self.index_path, "index.json")
-        with open(index_file, "w") as f:
+        tmp_path = index_file + ".tmp"
+        with open(tmp_path, "w", encoding="utf-8") as f:
             json.dump(self.index_cache, f, indent=2)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp_path, index_file)
     
     def clear(self) -> int:
         """Clear all stored data."""

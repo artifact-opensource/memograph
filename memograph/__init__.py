@@ -17,7 +17,7 @@ from memograph.lifecycle.evictor import MemoryEvictor, EvictionResult
 
 # Engines
 from memograph.engines.base import RetrievalAdapter, AdapterRegistry, RetrievalResult
-from memograph.engines.semantic_adapter import SemanticAdapter, HektorAdapter
+from memograph.engines.semantic_adapter import SemanticAdapter
 from memograph.engines.structured_adapter import StructuredAdapter
 from memograph.engines.graph_adapter import GraphAdapter
 from memograph.engines.temporal_adapter import TemporalAdapter
@@ -50,7 +50,7 @@ __all__ = [
     "MemoryEvictor", "EvictionResult",
     # Engines
     "RetrievalAdapter", "AdapterRegistry", "RetrievalResult",
-    "SemanticAdapter", "HektorAdapter", "StructuredAdapter", "GraphAdapter",
+    "SemanticAdapter", "StructuredAdapter", "GraphAdapter",
     "TemporalAdapter", "LexicalAdapter", "KVAdapter", "MemoryStore",
     # Auth
     "PermissionEngine", "PermissionContext", "PolicyDecision",

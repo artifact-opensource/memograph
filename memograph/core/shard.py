@@ -150,14 +150,34 @@ class MemoryShard:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "MemoryShard":
-        return cls.create(
-            content=data["content"],
-            owner=data["owner"],
-            scope=data["scope"],
-            domain=ShardDomain[data["domain"].upper()],
-            parent_hash=data.get("parent_hash"),
-            permissions=data.get("permissions", []),
-        )
+        try:
+            domain = ShardDomain(str(data.get("domain", "live")).lower())
+            raw_content_type = data.get("content_type", "CONVERSATIONAL")
+            content_type = (
+                raw_content_type
+                if isinstance(raw_content_type, ContentType)
+                else ContentType[str(raw_content_type).upper()]
+            )
+            shard = cls(
+                content=data["content"],
+                owner=data["owner"],
+                scope=data["scope"],
+                domain=domain,
+                parent_hash=data.get("parent_hash"),
+                permissions=list(data.get("permissions", [])),
+                timestamp=float(data.get("timestamp", time.time())),
+                version=int(data.get("version", 1)),
+                content_type=content_type,
+            )
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError(f"Invalid memory shard data: {exc}") from exc
+
+        stored_hash = data.get("shard_hash")
+        if stored_hash and stored_hash != shard.shard_hash:
+            raise ValueError(
+                f"Shard hash mismatch: stored {stored_hash}, computed {shard.shard_hash}"
+            )
+        return shard
     
     @classmethod
     def create(cls, content: Dict[str, Any], owner: str, scope: str,
@@ -174,7 +194,7 @@ class MemoryShard:
             scope=scope,
             domain=domain,
             parent_hash=parent_hash,
-            permissions=permissions or ["*"],
+            permissions=permissions if permissions is not None else ["*"],
             timestamp=timestamp or time.time(),
             version=version,
             content_type=content_type

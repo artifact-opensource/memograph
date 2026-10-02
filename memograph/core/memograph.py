@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import heapq
 import json
+import logging
 import math
 import os
 import shutil
@@ -30,6 +31,7 @@ from memograph.core.types import ContentType
 # Schema versioning
 SCHEMA_VERSION = 2
 SCHEMA_KEY = "_memograph_schema"
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -104,7 +106,7 @@ class MemoGraph:
             if rtr is not None:
                 rtr.index_shard(shard)
         except Exception:
-            pass  # indexing must never block ingestion
+            logger.exception("Retrieval adapter indexing failed for shard %s", shard.shard_hash)
         return shard.shard_hash
 
     def authorize_add(self, shard: MemoryShard, allowed_orgs: Optional[Set[str]] = None) -> bool:
@@ -320,26 +322,70 @@ class MemoGraph:
         Restore graph from JSON with automatic migration.
         Applies schema migrations if the on-disk version is older than current.
         """
-        with open(path) as f:
-            data = json.load(f)
+        try:
+            with open(path, encoding="utf-8") as f:
+                data = json.load(f)
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ValueError(f"Unable to load MemoGraph snapshot {path}: {exc}") from exc
+
+        if not isinstance(data, dict):
+            raise ValueError(f"Invalid MemoGraph snapshot {path}: expected an object")
 
         schema = data.pop(SCHEMA_KEY, 1)  # default to 1 if missing (legacy)
+        if not isinstance(schema, int) or schema > SCHEMA_VERSION:
+            raise ValueError(f"Unsupported MemoGraph schema in {path}: {schema!r}")
 
         # Auto-migrate schemas
         if schema < SCHEMA_VERSION:
-            data = _migrate_schema(data, schema, SCHEMA_VERSION)
+            try:
+                data = _migrate_schema(data, schema, SCHEMA_VERSION)
+            except Exception as exc:
+                raise ValueError(f"Unable to migrate MemoGraph snapshot {path}: {exc}") from exc
 
         graph = cls(schema_version=SCHEMA_VERSION)
-        for h, sd in data.get("nodes", {}).items():
-            shard = MemoryShard.from_dict(sd)
+        nodes = data.get("nodes", {})
+        if not isinstance(nodes, dict):
+            raise ValueError(f"Invalid MemoGraph snapshot {path}: nodes must be an object")
+
+        for node_key, shard_data in nodes.items():
+            try:
+                shard = MemoryShard.from_dict(shard_data)
+                if node_key != shard.shard_hash:
+                    raise ValueError(
+                        f"node key {node_key!r} does not match shard hash {shard.shard_hash}"
+                    )
+            except Exception as exc:
+                logger.error("Skipping invalid shard %s in %s: %s", node_key, path, exc)
+                continue
+            h = shard.shard_hash
             graph.nodes[h] = shard
             graph.domain_index[shard.domain].add(h)
             graph.scope_index[shard.scope].add(h)
 
-        for parent, children in data.get("edges", {}).items():
-            graph.edges[parent] = children
+        edges = data.get("edges", {})
+        if not isinstance(edges, dict):
+            logger.error("Ignoring invalid edges in %s: expected an object", path)
+            return graph
+
+        for parent, children in edges.items():
+            if parent not in graph.nodes:
+                logger.warning("Skipping topology edges for missing parent shard %s in %s", parent, path)
+                continue
+            if not isinstance(children, list):
+                logger.error("Skipping invalid child list for shard %s in %s", parent, path)
+                continue
             for child in children:
+                if child not in graph.nodes:
+                    logger.warning("Skipping dangling edge %s -> %s in %s", parent, child, path)
+                    continue
+                if child in graph.edges[parent]:
+                    continue
+                graph.edges[parent].append(child)
                 graph.reverse_edges[child].append(parent)
+
+        for shard in graph.nodes.values():
+            if shard.parent_hash and shard.parent_hash not in graph.nodes:
+                logger.warning("Shard %s has missing parent %s in %s", shard.shard_hash, shard.parent_hash, path)
 
         return graph
 
